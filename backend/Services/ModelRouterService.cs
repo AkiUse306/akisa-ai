@@ -2,18 +2,24 @@ using AkisaAi.Api.Models;
 
 namespace AkisaAi.Api.Services;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 public sealed class ModelRouterService
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 {
     private readonly OpenAiService _openAiService;
     private readonly ILogger<ModelRouterService> _logger;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public ModelRouterService(OpenAiService openAiService, ILogger<ModelRouterService> logger)
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
         _openAiService = openAiService;
         _logger = logger;
     }
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public async Task<string> RouteChatAsync(string prompt, IReadOnlyList<MemoryEntry> memory, IReadOnlyList<ConversationMessage> conversation)
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
         var contextSummary = BuildContextSummary(memory, conversation);
         var routedPrompt = $"{contextSummary}\n\nUser request: {prompt}";

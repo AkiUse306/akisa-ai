@@ -1,0 +1,12 @@
+{
+  "name": "akisa-desktop-app",
+  "version": "0.1.0",
+  "description": "Prototype desktop companion shell for AKISA-AI.",
+  "private": true,
+  "scripts": {
+    "start": "npx serve . -l 8080"
+  },
+  "devDependencies": {
+    "serve": "^14.2.0"
+  }
+}

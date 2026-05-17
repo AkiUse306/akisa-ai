@@ -1,0 +1,12 @@
+{
+  "name": "akisa-mobile-app",
+  "version": "0.1.0",
+  "description": "Prototype mobile companion shell for AKISA-AI.",
+  "private": true,
+  "scripts": {
+    "start": "npx serve . -l 8081"
+  },
+  "devDependencies": {
+    "serve": "^14.2.0"
+  }
+}

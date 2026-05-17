@@ -1,0 +1,32 @@
+[
+  {
+    "id": "coding-agent",
+    "name": "Coding Agent",
+    "description": "Writes and refactors code using best practices.",
+    "capabilities": ["code-generation", "refactoring", "bug-fixing"]
+  },
+  {
+    "id": "research-agent",
+    "name": "Research Agent",
+    "description": "Summarizes content, compares sources, and produces concise reports.",
+    "capabilities": ["summarization", "analysis", "insights"]
+  },
+  {
+    "id": "automation-agent",
+    "name": "Automation Agent",
+    "description": "Creates workflow plans and orchestrates task execution.",
+    "capabilities": ["workflow-planning", "API-integration", "scheduler"]
+  },
+  {
+    "id": "business-agent",
+    "name": "Business Agent",
+    "description": "Supports reporting, customer workflows, and analytics automation.",
+    "capabilities": ["analytics", "crm", "automation"]
+  },
+  {
+    "id": "creative-agent",
+    "name": "Creative Agent",
+    "description": "Generates ideas, story outlines, marketing copy, and design briefs.",
+    "capabilities": ["ideation", "copywriting", "creative-direction"]
+  }
+]

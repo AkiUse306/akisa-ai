@@ -1,0 +1,8 @@
+{
+  "name": "akisa-desktop",
+  "displayName": "AKISA Desktop Companion",
+  "description": "A future desktop AI companion for local automation, file indexing, and assistant workflows.",
+  "platforms": ["windows", "macos", "linux"],
+  "technology": "Electron / .NET backend",
+  "features": ["local AI execution", "file indexing", "desktop automation", "AI overlay assistant"]
+}

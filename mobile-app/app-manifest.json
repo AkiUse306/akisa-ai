@@ -1,0 +1,7 @@
+{
+  "name": "akisa-mobile",
+  "displayName": "AKISA Mobile Assistant",
+  "description": "A future mobile AI companion for voice, camera, and chat.",
+  "technology": "React Native / .NET MAUI",
+  "features": ["voice assistant", "AI chat", "camera AI", "notifications"]
+}

@@ -1,6 +1,10 @@
 # Inference Engine
 
-The inference-engine directory is dedicated to AKISA-AI's model runtime, GPU acceleration, and multi-modal processing.
+The inference-engine directory contains a small runtime prototype for AKISA-AI multi-modal inference.
+
+## Prototype
+
+- `src/main.cpp` is a command-line sample that simulates inference tasks such as analysis and vision routing.
 
 ## Phase 3 goals
 
@@ -16,4 +20,5 @@ mkdir -p build
 cd build
 cmake ..
 cmake --build .
+./akama_inference analyze "Summarize the reasoning architecture"
 ```

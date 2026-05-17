@@ -65,6 +65,14 @@ Implemented foundations for:
 
 ## Getting Started
 
+### Environment
+
+Copy the example `.env.example` file into `.env` and fill in your keys. The repository ignores `.env`, so secrets stay out of source control.
+
+```bash
+cp .env.example .env
+```
+
 ### Backend
 
 ```bash
@@ -80,6 +88,14 @@ cd frontend
 npm install
 npm run dev
 ```
+
+### Docker
+
+```bash
+docker compose -f infrastructure/docker-compose.yml up --build
+```
+
+The frontend runs at `http://localhost:3000` and the backend at `http://localhost:5000`.
 
 ## Next steps
 

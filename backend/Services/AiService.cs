@@ -3,32 +3,41 @@ using AkisaAi.Api.Models;
 
 namespace AkisaAi.Api.Services;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 public sealed class AiService
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 {
     private readonly InMemoryStore _store;
     private readonly ModelRouterService _router;
+    private readonly VectorMemoryService _vectorMemory;
     private readonly ILogger<AiService> _logger;
 
-    public AiService(InMemoryStore store, ModelRouterService router, ILogger<AiService> logger)
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    public AiService(InMemoryStore store, ModelRouterService router, VectorMemoryService vectorMemory, ILogger<AiService> logger)
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
         _store = store;
         _router = router;
+        _vectorMemory = vectorMemory;
         _logger = logger;
     }
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public async Task<ChatResponse> CreateChatResponseAsync(ChatRequest request, string userId)
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
         var sessionId = request.SessionId ?? _store.CreateSession(userId);
         var user = _store.GetUserById(userId);
-        var memory = _store.GetRecentMemory(userId, 5);
+        var semanticMemory = await _vectorMemory.SearchMemoryAsync(userId, request.Prompt, 5);
         var conversation = _store.GetConversation(sessionId);
 
         _store.AddConversationMessage(sessionId, "user", request.Prompt);
+        await _vectorMemory.AddMemoryAsync(userId, request.Prompt, "user_prompt");
 
-        var assistantMessage = await _router.RouteChatAsync(request.Prompt, memory, conversation);
+        var assistantMessage = await _router.RouteChatAsync(request.Prompt, semanticMemory, conversation);
 
         _store.AddConversationMessage(sessionId, "assistant", assistantMessage);
-        _store.AddMemoryEntry(userId, "conversation", request.Prompt);
+        await _vectorMemory.AddMemoryAsync(userId, assistantMessage, "assistant_response");
 
         return new ChatResponse
         {
@@ -39,7 +48,9 @@ public sealed class AiService
         };
     }
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public IEnumerable<AgentDescriptor> GetAvailableAgents()
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
         return new[]
         {
@@ -51,7 +62,9 @@ public sealed class AiService
         };
     }
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public Task<AgentExecutionResult> ExecuteAgentAsync(string agentId, string input, string userId)
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
         var agent = GetAvailableAgents().FirstOrDefault(a => a.Id == agentId);
         if (agent is null)
@@ -82,30 +95,6 @@ public sealed class AiService
             Output = result,
             Success = true
         });
-    }
-
-    private static string GenerateAssistantText(string prompt, IReadOnlyList<MemoryEntry> memory, IReadOnlyList<ConversationMessage> conversation)
-    {
-        var memorySummary = memory.Any()
-            ? string.Join(" \n", memory.Take(3).Select(entry => $"- {entry.Type}: {entry.Content}"))
-            : "No semantic memory was available for this session.";
-
-        var historySummary = conversation.Any()
-            ? string.Join(" \n", conversation.Skip(Math.Max(0, conversation.Count - 4)).Select(message => $"[{message.Role}] {message.Text}"))
-            : "No previous conversation history found.";
-
-        return $"Prompt: {prompt}\n\nMemory:\n{memorySummary}\n\nRecent conversation:\n{historySummary}\n\nResponse:\n{ComposeResponse(prompt)}";
-    }
-
-    private static string ComposeResponse(string prompt)
-    {
-        return prompt.Contains("plan", StringComparison.OrdinalIgnoreCase)
-            ? "I can create a multi-step plan for you. Start by confirming the key objectives and then I will break the task into discrete actions."
-            : prompt.Contains("code", StringComparison.OrdinalIgnoreCase) || prompt.Contains("bug", StringComparison.OrdinalIgnoreCase)
-                ? "I can help refactor your code or provide a sample implementation for the requested functionality."
-                : prompt.Contains("analyze", StringComparison.OrdinalIgnoreCase) || prompt.Contains("summarize", StringComparison.OrdinalIgnoreCase)
-                    ? "I will analyze your request and summarize the most important points."
-                    : "I have processed your request and created a response that includes context, memory, and actionable guidance.";
     }
 
     private static string ExecuteCodingAgent(string input)

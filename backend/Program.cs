@@ -1,4 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using AkisaAi.Api.Data;
@@ -11,6 +13,33 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var envFile = Path.Combine(Directory.GetCurrentDirectory(), ".env");
+if (File.Exists(envFile))
+{
+    foreach (var rawLine in File.ReadAllLines(envFile))
+    {
+        var line = rawLine.Trim();
+        if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#'))
+        {
+            continue;
+        }
+
+        var separatorIndex = line.IndexOf('=');
+        if (separatorIndex <= 0)
+        {
+            continue;
+        }
+
+        var envKey = line[..separatorIndex].Trim();
+        var value = line[(separatorIndex + 1)..].Trim();
+        var configKey = envKey.Replace("__", ":");
+        if (!builder.Configuration.AsEnumerable().Any(pair => pair.Key == configKey))
+        {
+            builder.Configuration[configKey] = value;
+        }
+    }
+}
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -36,6 +65,9 @@ builder.Services.AddSingleton<InMemoryStore>();
 builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddScoped<OpenAiService>();
 builder.Services.AddScoped<ModelRouterService>();
+builder.Services.AddScoped<VectorMemoryService>();
+builder.Services.AddScoped<PluginService>();
+builder.Services.AddScoped<ComparisonService>();
 builder.Services.AddScoped<AiService>();
 builder.Services.AddScoped<VisionService>();
 
@@ -120,7 +152,7 @@ app.MapGet("/api/auth/me", (ClaimsPrincipal user, InMemoryStore store) =>
     return profile is null ? Results.NotFound() : Results.Ok(new { profile.Id, profile.Username, profile.DisplayName, profile.Role, profile.CreatedAt });
 }).RequireAuthorization();
 
-app.MapPost("/api/chat", async (ChatRequest request, ClaimsPrincipal user, AiService aiService, InMemoryStore store) =>
+app.MapPost("/api/chat", async (ChatRequest request, ClaimsPrincipal user, AiService aiService) =>
 {
     var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
     if (string.IsNullOrEmpty(userId))
@@ -158,6 +190,18 @@ app.MapGet("/api/memory/recent", (ClaimsPrincipal user, InMemoryStore store) =>
     return Results.Ok(memory);
 }).RequireAuthorization();
 
+app.MapGet("/api/memory/search", async (string query, ClaimsPrincipal user, VectorMemoryService vectorMemory) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    var memory = await vectorMemory.SearchMemoryAsync(userId, query, 10);
+    return Results.Ok(memory);
+}).RequireAuthorization();
+
 app.MapGet("/api/conversations/{sessionId}", (string sessionId, InMemoryStore store, ClaimsPrincipal user) =>
 {
     if (!store.TryGetUserIdForSession(sessionId, out var userId) || user.FindFirstValue(ClaimTypes.NameIdentifier) != userId)
@@ -168,6 +212,31 @@ app.MapGet("/api/conversations/{sessionId}", (string sessionId, InMemoryStore st
     var conversation = store.GetConversation(sessionId);
     return Results.Ok(conversation);
 }).RequireAuthorization();
+
+app.MapGet("/api/plugins", (PluginService pluginService) => Results.Ok(pluginService.GetPlugins())).RequireAuthorization();
+
+app.MapPost("/api/plugins/{pluginId}/execute", async (string pluginId, PluginExecutionRequest request, PluginService pluginService, ClaimsPrincipal user) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    var result = await pluginService.ExecutePluginAsync(pluginId, request.Input);
+    return Results.Ok(result);
+}).RequireAuthorization();
+
+app.MapPost("/api/compare", async (CompareRequest request, ComparisonService comparisonService) =>
+{
+    if (string.IsNullOrWhiteSpace(request.Prompt))
+    {
+        return Results.BadRequest(new { message = "Prompt is required for comparison." });
+    }
+
+    var result = await comparisonService.CompareAsync(request.Prompt);
+    return Results.Ok(result);
+});
 
 app.MapPost("/api/vision/analyze-image", async (HttpRequest request, VisionService visionService, ClaimsPrincipal user) =>
 {
@@ -209,9 +278,13 @@ app.MapHub<AiHub>("/realtime/ai");
 
 app.Run();
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 public class AiHub : Hub
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 {
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public async Task SendIfReady(string message)
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
         await Clients.All.SendAsync("ReceiveMessage", message);
     }

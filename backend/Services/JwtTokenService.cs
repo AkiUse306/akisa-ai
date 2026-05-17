@@ -7,17 +7,23 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace AkisaAi.Api.Services;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 public sealed class JwtTokenService
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 {
     private readonly byte[] _secret;
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public JwtTokenService(IConfiguration configuration)
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
         var secret = configuration["Jwt:Secret"] ?? "akisa-ai-development-super-secret-key";
         _secret = Encoding.UTF8.GetBytes(secret);
     }
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public string CreateJwtToken(User user)
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
         var claims = new[]
         {
@@ -36,7 +42,9 @@ public sealed class JwtTokenService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public TokenValidationParameters GetValidationParameters()
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     {
         return new TokenValidationParameters
         {

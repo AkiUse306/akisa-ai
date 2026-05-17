@@ -1,61 +1,79 @@
 namespace AkisaAi.Api.Models;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-public sealed class ChatRequest
+public sealed class PluginManifest
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public string Prompt { get; set; } = string.Empty;
+    public string Id { get; set; } = string.Empty;
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public string? Model { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public string? SessionId { get; set; }
+    public string Version { get; set; } = "0.1.0";
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    public string Description { get; set; } = string.Empty;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    public IReadOnlyList<PluginAction> Actions { get; set; } = Array.Empty<PluginAction>();
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-public sealed class ChatResponse
+public sealed class PluginAction
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public string RequestId { get; set; } = Guid.NewGuid().ToString();
+    public string Id { get; set; } = string.Empty;
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public string Message { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public string Model { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public string SessionId { get; set; } = string.Empty;
+    public IReadOnlyList<PluginInput> Inputs { get; set; } = Array.Empty<PluginInput>();
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-public sealed class CompareRequest
+public sealed class PluginInput
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public string Prompt { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    public string Type { get; set; } = string.Empty;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    public bool Required { get; set; }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-public sealed class CompareResponse
+public sealed class PluginExecutionRequest
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public string Akisa { get; set; } = string.Empty;
+    public string Input { get; set; } = string.Empty;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+}
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+public sealed class PluginExecutionResult
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+{
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    public string PluginId { get; set; } = string.Empty;
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public string ChatGpt { get; set; } = string.Empty;
+    public string Output { get; set; } = string.Empty;
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public string Cursor { get; set; } = string.Empty;
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-    public string SessionId { get; set; } = string.Empty;
+    public bool Success { get; set; }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

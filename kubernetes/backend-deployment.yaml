@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: akisa-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: akisa-backend
+  template:
+    metadata:
+      labels:
+        app: akisa-backend
+    spec:
+      containers:
+        - name: backend
+          image: akisa-ai-backend:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: ASPNETCORE_URLS
+              value: "http://+:80"
+            - name: Jwt__Secret
+              valueFrom:
+                secretKeyRef:
+                  name: akisa-secrets
+                  key: jwt-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: akisa-backend-service
+spec:
+  selector:
+    app: akisa-backend
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP

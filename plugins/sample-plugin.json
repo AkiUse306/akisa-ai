@@ -1,0 +1,17 @@
+{
+  "id": "akisa-sample-plugin",
+  "name": "akisa-sample-plugin",
+  "displayName": "AKISA Sample Plugin",
+  "version": "0.1.0",
+  "description": "A sample plugin that extends AKISA-AI with a simple content summarization action.",
+  "actions": [
+    {
+      "id": "summarize-text",
+      "name": "Summarize Text",
+      "description": "Summarizes the provided text into a concise overview.",
+      "inputs": [
+        { "name": "text", "type": "string", "required": true }
+      ]
+    }
+  ]
+}

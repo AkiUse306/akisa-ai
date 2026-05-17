@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: akisa-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: akisa-frontend
+  template:
+    metadata:
+      labels:
+        app: akisa-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: akisa-ai-frontend:latest
+          ports:
+            - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: akisa-frontend-service
+spec:
+  selector:
+    app: akisa-frontend
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP

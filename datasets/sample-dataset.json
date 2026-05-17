@@ -1,0 +1,12 @@
+[
+  {
+    "id": "sample-1",
+    "type": "conversation",
+    "content": "User: Build an AI platform like AKISA. Assistant: Start by scaffolding the backend, frontend, and AI services."
+  },
+  {
+    "id": "sample-2",
+    "type": "vision",
+    "content": "An image showing a dashboard with AI analytics widgets and a multi-modal assistant UI."
+  }
+]
