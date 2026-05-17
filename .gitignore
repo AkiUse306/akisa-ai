@@ -1,0 +1,31 @@
+# General
+.DS_Store
+node_modules/
+.vscode/
+.env
+.env.local
+.env.*.local
+**/bin/
+**/obj/
+**/dist/
+**/*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+.vscode-test/
+
+# Backend
+backend/*.db
+backend/Secrets/
+
+# Frontend
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+
+# C++ build
+ai-core/build/
+
+# OS files
+Thumbs.db
