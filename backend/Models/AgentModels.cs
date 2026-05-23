@@ -19,6 +19,9 @@ public sealed class AgentExecutionRequest
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public string Input { get; set; } = string.Empty;
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    public string? AgentType { get; set; }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member

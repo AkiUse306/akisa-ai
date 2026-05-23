@@ -13,6 +13,9 @@ public sealed class ChatRequest
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public string? SessionId { get; set; }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    public string? AgentType { get; set; }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
@@ -57,5 +60,41 @@ public sealed class CompareResponse
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public string SessionId { get; set; } = string.Empty;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+}
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+public sealed class RefreshTokenRequest
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+{
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    public string RefreshToken { get; set; } = string.Empty;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    public string UserId { get; set; } = string.Empty;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+}
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+public sealed class ToolExecutionRequest
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+{
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    public string ToolId { get; set; } = string.Empty;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    public Dictionary<string, object>? Parameters { get; set; }
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+}
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+public sealed class TextToSpeechRequest
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+{
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    public string Text { get; set; } = string.Empty;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+    public string? Voice { get; set; }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

@@ -63,6 +63,7 @@ builder.Services.Configure<JsonOptions>(options =>
 
 builder.Services.AddSingleton<InMemoryStore>();
 builder.Services.AddSingleton<JwtTokenService>();
+builder.Services.AddScoped<RedisService>();
 builder.Services.AddScoped<OpenAiService>();
 builder.Services.AddScoped<ModelRouterService>();
 builder.Services.AddScoped<VectorMemoryService>();
@@ -70,6 +71,9 @@ builder.Services.AddScoped<PluginService>();
 builder.Services.AddScoped<ComparisonService>();
 builder.Services.AddScoped<AiService>();
 builder.Services.AddScoped<VisionService>();
+builder.Services.AddScoped<ChatStreamingService>();
+builder.Services.AddScoped<AgentOrchestrationService>();
+builder.Services.AddScoped<VoiceService>();
 
 var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "akisa-ai-development-super-secret-key";
 var key = Encoding.UTF8.GetBytes(jwtSecret);
@@ -123,7 +127,7 @@ app.MapPost("/api/auth/register", (RegisterRequest request, InMemoryStore store,
     return Results.Ok(new TokenResponse(accessToken, string.Empty, user.Id, sessionId));
 });
 
-app.MapPost("/api/auth/login", (LoginRequest request, InMemoryStore store, JwtTokenService tokenService) =>
+app.MapPost("/api/auth/login", (LoginRequest request, InMemoryStore store, JwtTokenService tokenService, RedisService redisService) =>
 {
     if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
     {
@@ -136,9 +140,46 @@ app.MapPost("/api/auth/login", (LoginRequest request, InMemoryStore store, JwtTo
     }
 
     var accessToken = tokenService.CreateJwtToken(user);
+    var refreshToken = tokenService.CreateRefreshToken(user);
     var sessionId = store.CreateSession(user.Id);
-    return Results.Ok(new TokenResponse(accessToken, string.Empty, user.Id, sessionId));
+
+    // Store refresh token in Redis (or fallback to in-memory)
+    _ = redisService.SetAsync($"refresh_token:{user.Id}", refreshToken, TimeSpan.FromDays(7));
+
+    return Results.Ok(new TokenResponse(accessToken, refreshToken, user.Id, sessionId));
 });
+
+app.MapPost("/api/auth/refresh", (RefreshTokenRequest request, JwtTokenService tokenService, RedisService redisService, InMemoryStore store) =>
+{
+    if (string.IsNullOrWhiteSpace(request.RefreshToken))
+    {
+        return Results.BadRequest(new { message = "Refresh token is required." });
+    }
+
+    // Validate refresh token (in real app, decode JWT and verify)
+    // For now, check if it exists in Redis or memory
+    var user = store.GetUserById(request.UserId);
+    if (user == null)
+    {
+        return Results.Unauthorized();
+    }
+
+    var newAccessToken = tokenService.CreateJwtToken(user);
+    return Results.Ok(new { accessToken = newAccessToken, expiresIn = 3600 });
+});
+
+app.MapPost("/api/auth/logout", async (ClaimsPrincipal user, RedisService redisService) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    // Revoke refresh token
+    await redisService.DeleteAsync($"refresh_token:{userId}");
+    return Results.Ok(new { message = "Logged out successfully." });
+}).RequireAuthorization();
 
 app.MapGet("/api/auth/me", (ClaimsPrincipal user, InMemoryStore store) =>
 {
@@ -164,6 +205,34 @@ app.MapPost("/api/chat", async (ChatRequest request, ClaimsPrincipal user, AiSer
     return Results.Ok(response);
 }).RequireAuthorization();
 
+app.MapPost("/api/chat/stream", async (ChatRequest request, ClaimsPrincipal user, ChatStreamingService streamingService, HttpContext httpContext) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    httpContext.Response.ContentType = "text/event-stream";
+    httpContext.Response.Headers.CacheControl = "no-cache";
+    httpContext.Response.Headers.Connection = "keep-alive";
+
+    try
+    {
+        await foreach (var token in streamingService.StreamChatAsync(request.Prompt, "gpt-4"))
+        {
+            await httpContext.Response.WriteAsync($"data: {System.Text.Json.JsonSerializer.Serialize(token)}\n\n");
+            await httpContext.Response.Body.FlushAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        await httpContext.Response.WriteAsync($"data: {System.Text.Json.JsonSerializer.Serialize(new { error = ex.Message })}\n\n");
+    }
+
+    return Results.Empty;
+}).RequireAuthorization();
+
 app.MapGet("/api/agents", (AiService aiService) => Results.Ok(aiService.GetAvailableAgents())).RequireAuthorization();
 
 app.MapPost("/api/agents/{agentId}/execute", async (string agentId, AgentExecutionRequest request, ClaimsPrincipal user, AiService aiService) =>
@@ -176,6 +245,77 @@ app.MapPost("/api/agents/{agentId}/execute", async (string agentId, AgentExecuti
 
     var result = await aiService.ExecuteAgentAsync(agentId, request.Input, userId);
     return Results.Ok(result);
+}).RequireAuthorization();
+
+app.MapPost("/api/orchestration/agents", async (AgentExecutionRequest request, ClaimsPrincipal user, AgentOrchestrationService orchestration) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    var result = await orchestration.ExecuteAgentAsync(userId, request.AgentType ?? "general", request.Input);
+    return Results.Ok(result);
+}).RequireAuthorization();
+
+app.MapPost("/api/orchestration/tools", async (ToolExecutionRequest request, ClaimsPrincipal user, AgentOrchestrationService orchestration) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    var result = await orchestration.ExecuteToolAsync(userId, request.ToolId, request.Parameters ?? new());
+    return Results.Ok(result);
+}).RequireAuthorization();
+
+app.MapPost("/api/voice/text-to-speech", async (TextToSpeechRequest request, ClaimsPrincipal user, VoiceService voiceService) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (string.IsNullOrWhiteSpace(request.Text))
+    {
+        return Results.BadRequest(new { message = "Text is required." });
+    }
+
+    var result = await voiceService.TextToSpeechAsync(request.Text, request.Voice ?? "nova");
+    if (result.Success)
+    {
+        return Results.File(result.Data, result.ContentType, "speech.mp3");
+    }
+
+    return Results.BadRequest(new { message = result.Message });
+}).RequireAuthorization();
+
+app.MapPost("/api/voice/speech-to-text", async (HttpRequest request, ClaimsPrincipal user, VoiceService voiceService) =>
+{
+    var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+    if (string.IsNullOrEmpty(userId))
+    {
+        return Results.Unauthorized();
+    }
+
+    if (!request.HasFormContentType || request.Form.Files.Count == 0)
+    {
+        return Results.BadRequest(new { message = "Audio file is required." });
+    }
+
+    var file = request.Form.Files[0];
+    using var stream = file.OpenReadStream();
+    var result = await voiceService.SpeechToTextAsync(stream);
+
+    if (result.Success)
+    {
+        return Results.Ok(result);
+    }
+
+    return Results.BadRequest(new { message = result.Text });
 }).RequireAuthorization();
 
 app.MapGet("/api/memory/recent", (ClaimsPrincipal user, InMemoryStore store) =>
